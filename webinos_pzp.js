@@ -21,7 +21,7 @@ var fs = require("fs"),
 
 var options = {};
 var pzpInstance;
-var pzp   = require("./webinos/pzp/lib/pzp");
+var pzp   = require("./webinos/core/pzp/lib/pzp");
 __EnablePolicyEditor = false;
 
 function help() {
@@ -56,7 +56,7 @@ process.argv.forEach(function (arg) {
         options.preference = parts[1];
         break;
       case "--auth-code":
-        options.code = parts[1]+"="; // added as last letter in qrcode is = but above "split" removes this info
+        options.code = parts[1];
         break;
       default:
         console.log("unknown option: " + parts[0]);
@@ -155,7 +155,7 @@ fs.readFile(path.join(__dirname, "config-pzp.json"), function(err, data) {
 
 function initializeWidgetServer() {
   // Widget manager server
-  var wrt = require("./webinos/common/manager/widget_manager/lib/ui/widgetServer");
+  var wrt = require("./webinos/core/manager/widget_manager/lib/ui/widgetServer");
   if (typeof wrt !== "undefined") {
     // Attempt to start the widget server.
     wrt.start(function (msg, wrtPort) {
