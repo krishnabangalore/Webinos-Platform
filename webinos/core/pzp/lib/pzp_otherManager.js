@@ -26,7 +26,7 @@ var RPCHandler   = rpc.RPCHandler;
 var Sync         = dependency.global.require(dependency.global.manager.synchronisation_manager.location, "index");
 var PzpDiscovery = require("./pzp_local");
 var Session      = require("./session");
-
+var path = require("path");
 var Pzp_OtherManager = function (_parent) {
   // TODO: these variables are directly set by service discovery does not look right
   this.serviceListener;  // For a single callback to be registered via addRemoteServiceListener.
@@ -36,7 +36,8 @@ var Pzp_OtherManager = function (_parent) {
   this.messageHandler;
   this.localDiscovery;
   var self = this;
-
+  var sync = new Sync();
+  logger.addId(_parent.config.metaData.webinosName);
   /**
    * Any entity connecting to PZP has to register its address with other end point
    */
@@ -53,12 +54,48 @@ var Pzp_OtherManager = function (_parent) {
     _parent.sendMessage(msg, validMsgObj.from);
   }
 
+  function getInitModules() {
+    return this.loadedModules;
+  };
+
+  function syncHash(receivedMsg) {
+    var policyPath = path.join(_parent.config.metaData.webinosRoot, "policies","policy.xml");
+    var policy = sync.parseXMLFile(policyPath);
+    var list = {trustedList: _parent.config.trustedList, _crl: _parent.config.crl, cert: _parent.config.cert.external, policy: policy};
+    var result = sync.compareFileHash(list, receivedMsg);
+    if (Object.keys(result).length >= 1) {
+      _parent.prepMsg(_parent.pzp_state.sessionId, _parent.config.metaData.pzhId, "sync_compare", result);
+    }
+    else {
+      logger.log("All Files are already synchronized");
+    }
+  }
+
+  function updateHash(receivedMsg){
+    var msg;
+    for (msg in receivedMsg) {
+      if (msg === "trustedList") {
+        _parent.config.metaData.trustedList = receivedMsg[msg];
+        _parent.config.storeTrustedList(_parent.config.metaData.trustedList);
+      }
+      else if (msg === "crl") {
+        _parent.config.crl = receivedMsg[msg];
+        _parent.config.storeCrl(_parent.config.crl);
+      }
+      else if (msg === "cert") {
+        _parent.config.cert.external = receivedMsg[msg];
+        _parent.config.storeCertificate(_parent.config.cert.external, "external");
+      }
+    }
+    logger.log("Files Synchronised with the PZH");
+  }
   /**
    * Initializes Webinos Other Components that interact with the session manager
    * @param loadModules : webinos modules that should be loaded in the PZP
    */
   this.initializeRPC_Message = function(_loadModules) {
-    self.registry       = new Registry();
+    self.loadedModules  = _loadModules;
+    self.registry       = new Registry(this);
     self.rpcHandler     = new RPCHandler(_parent, self.registry); // Handler for remote method calls.
     self.discovery      = new Discovery(self.rpcHandler, [self.registry]);
     self.registry.registerObject(self.discovery);
@@ -86,7 +123,8 @@ var Pzp_OtherManager = function (_parent) {
   /**
    * Used by RPC to register and update services to the PZH
    */
-  this.registerServicesWithPzh = function(pzhId) {
+  this.registerServicesWithPzh = function() {
+    var pzhId = _parent.config.metaData.pzhId;
     if (_parent.pzp_state.connectedPzh[pzhId] && _parent.pzp_state.mode === _parent.modes[1]) {
       var localServices = self.discovery.getRegisteredServices();
       var msg = {"type" : "prop", "from" : _parent.pzp_state.sessionId, "to": pzhId, "payload":{"status":"registerServices",
@@ -102,7 +140,7 @@ var Pzp_OtherManager = function (_parent) {
   this.startOtherManagers = function(){
     self.setupMessage_RPCHandler();
     registerMessaging(_parent.config.metaData.pzhId);    //message handler
-    self.registerServicesWithPzh(_parent.config.metaData.pzhId); //rpc
+    self.registerServicesWithPzh(); //rpc
     if(!self.localDiscovery ) {// local discovery&& mode !== modes[0]
       self.localDiscovery = new PzpDiscovery(_parent);
       self.localDiscovery.startLocalAdvert();
@@ -135,7 +173,7 @@ var Pzp_OtherManager = function (_parent) {
             setFoundService(validMsgObj);
             break;
           case 'listUnregServices':
-            _parent.prepMsg(_parent.pzp_state.sessionId, _parent.config.metaData.pzhId, "unregServicesReply", {services: self.getInitModules(), id:validMsgObj.payload.message.listenerId });
+            _parent.prepMsg(_parent.pzp_state.sessionId, _parent.config.metaData.pzhId, "unregServicesReply", {services: getInitModules.call(self), id:validMsgObj.payload.message.listenerId });
             break;
           case 'registerService':
             self.registry.loadModule({"name": validMsgObj.payload.message.name,"params": validMsgObj.payload.message.params}, self.rpcHandler);
@@ -144,19 +182,10 @@ var Pzp_OtherManager = function (_parent) {
             self.registry.unregisterObject({ "id": validMsgObj.payload.message.svId, "api": validMsgObj.payload.message.svAPI});
             break;
           case "sync_hash":
-            Sync.compareFileHash(_parent.config.metaData.webinosRoot, _parent.config.metaData.webinosName, validMsgObj.payload.message, function(result){
-              if(result.trustedList === 1 || result.crl === 1 || result.external_cert === 1 || result.policies === 1){
-                _parent.prepMsg(_parent.pzp_state.sessionId, _parent.config.metaData.pzhId, "sync_compare", result);
-              } else {
-                logger.log("All Files are already synchronized");
-              }
-            });
+            syncHash(validMsgObj.payload.message);
             break;
           case "update_hash":
-            Sync.updateFileMissing(_parent.config.metaData.webinosRoot, _parent.config.metaData.webinosName, validMsgObj.payload.message, function(){
-              logger.log("Files Synchronised with the PZH");
-              _parent.updateTrustedList();
-            });
+            updateHash(validMsgObj.payload.message);
             break;
         }
       } else {
