@@ -33,11 +33,8 @@
      */
     var NS = "http://webinos.org/api/test";
 
-    var moduleRoot = require('../dependencies.json');
-    var dependencies = require('../' + moduleRoot.root.location + '/dependencies.json');
-    var webinosRoot = '../' + moduleRoot.root.location;
-
-    var get42 = require(webinosRoot + dependencies.api.get42.location);
+    var webinos = require("find-dependencies")(__dirname);
+    var get42 = webinos.global.require(webinos.global.api.get42.location);
 
     /**
      * Testing feature with life answer.
@@ -47,10 +44,14 @@
      */
     function Get42Feature(rpcHandler) {
     	GenericFeature.GenericFeature.call(this);
-    	this.embedService(new get42.Service(rpcHandler));
+    	this.module = new get42.Module(rpcHandler);
+    	var self = this;
+    	this.module.init(function(service) {
+    	    self.embedService(service)
+    	});
     }
 
     sys.inherits(Get42Feature, GenericFeature.GenericFeature);
-    exports.Service = Get42Feature;
+    exports.Module = Get42Feature;
     exports.NS = NS;
 })();

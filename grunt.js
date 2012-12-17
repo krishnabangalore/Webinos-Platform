@@ -30,15 +30,18 @@ module.exports = function(grunt) {
     },
     // dir names to exclude from "clean-certs" target
     excludepaths: ['auth_api', 'context_manager', 'logs', 'wrt'],
+    header: "if(typeof webinos === 'undefined'){",
+    footer: "}",
 
     // targets
     lint: ['grunt.js', 'webinos/**/*.js'],
     concat: {
       dist: {
         src: [
+          '<banner:header>',
           'webinos/core/wrt/lib/webinos.util.js',
-          'webinos/core/rpc/lib/registry.js',
-          'webinos/core/rpc/lib/rpc.js',
+          'node_modules/webinos-jsonrpc2/lib/registry.js',
+          'node_modules/webinos-jsonrpc2/lib/rpc.js',
           'webinos/core/manager/messaging/lib/messagehandler.js',
           'webinos/core/wrt/lib/webinos.session.js',
           'webinos/core/wrt/lib/webinos.servicedisco.js',
@@ -53,6 +56,7 @@ module.exports = function(grunt) {
           'webinos/core/wrt/lib/webinos.geolocation.js',
           'webinos/core/wrt/lib/webinos.sensors.js',
           'webinos/core/wrt/lib/webinos.events.js',
+          'webinos/core/wrt/lib/webinos.app2app.js',
           'webinos/core/wrt/lib/webinos.applauncher.js',
           'webinos/core/wrt/lib/webinos.vehicle.js',
           'webinos/core/wrt/lib/webinos.deviceorientation.js',
@@ -61,7 +65,8 @@ module.exports = function(grunt) {
           'webinos/core/wrt/lib/webinos.contacts.js',
           'webinos/core/wrt/lib/webinos.devicestatus.js',
           'webinos/core/wrt/lib/webinos.discovery.js',
-          'webinos/core/wrt/lib/webinos.payment.js'
+          'webinos/core/wrt/lib/webinos.payment.js',
+          '<banner:footer>'
         ],
         dest: '<config:generated.normal>'
       }
@@ -82,6 +87,21 @@ module.exports = function(grunt) {
 
   // plugin provides "clean" task
   grunt.loadNpmTasks('grunt-contrib-clean');
+
+  grunt.registerTask(
+    'check-rpc',
+    'Check if webinos-jsonrpc2 is in local node_modules, required for concat task',
+    function() {
+      var isInstalled = (fs.existsSync || path.existsSync)('./node_modules/webinos-jsonrpc2/');
+      if (!isInstalled) {
+        console.log();
+        console.log('\nError: webinos-jsonrpc2 must be in local node_modules.\n');
+        console.log();
+        return false;
+      }
+
+      grunt.task.run('concat');
+    });
 
   grunt.registerTask('clean-certs', 'Cleans certificates from user dir', function() {
     var winPath = ['AppData', 'Roaming', 'webinos'];
@@ -126,7 +146,7 @@ module.exports = function(grunt) {
     grunt.config.set('clean', oldClean);
   });
 
-  grunt.registerTask('minify', 'concat min');
+  grunt.registerTask('minify', 'check-rpc min');
 
-  grunt.registerTask('default', 'concat');
+  grunt.registerTask('default', 'check-rpc');
 };
