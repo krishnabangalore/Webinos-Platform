@@ -120,12 +120,12 @@ body {
 	color: #0084FF;
 }
 .subtitle {
-	font-size: 100%;
+	font-size: 140%;
 	margin-left: 10px;
 }
 
 .content {
-	min-height: 150%;
+	min-height: 100%;
 	box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -175,7 +175,7 @@ body {
 }
 
 .button {
-	width: 25%;
+	width: 49%;
 	margin: 0 auto;
 	padding: 0.3em;
 	cursor: pointer;
@@ -308,7 +308,7 @@ body {
 	}
 
 	.content {
-		height: 150%;
+		height: 100%;
 		overflow: auto;
 		display: inline-block;
 		width: 560px;
@@ -328,7 +328,6 @@ body {
 		border-bottom: none;
 		font-size: 17px;
 	}
-	
 
 	.title {
 		-webkit-transform: rotate(-90deg);
