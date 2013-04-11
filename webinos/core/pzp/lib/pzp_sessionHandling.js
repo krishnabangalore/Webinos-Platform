@@ -119,6 +119,16 @@ var Pzp = function () {
         self.sendUpdateToAll();
     };
 
+//-------DeviceType-----
+
+    this.changedeviceType = function (name) {
+        self.config.metaData.deviceType = name;
+        self.config.storeDetails(null, "metaData", self.config.metaData);
+      //  self.sendUpdateToAll();
+    };
+
+//----------------------
+
     /**
      * Sets webinos pzp sessionId
      */
@@ -379,6 +389,7 @@ var Pzp = function () {
             pzhHost: '0.0.0.0',
             pzhName: '',
             friendlyName: '',
+            deviceType: '',   //DeviceType
             forcedDeviceName: '',
             sessionIdentity: '0.0.0.0'
         };
@@ -666,7 +677,7 @@ var ConnectHub = function (parent) {
 
                 pzpClient.on ("error", function (err) {
                     pzpServer.startServer ();
-                    if (err.code === "EHOSTUNREACH" || err.code === "ECONNREFUSED" || err.code === "ECONNRESET") {
+                    if (err.code === "ECONNREFUSED" || err.code === "ECONNRESET") {
                         logger.error ("Connect  attempt to YOUR PZH " + parent.config.metaData.pzhId + " failed.");
                         parent.webinos_manager.startOtherManagers ();
                     }

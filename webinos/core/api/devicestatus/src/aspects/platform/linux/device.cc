@@ -33,6 +33,9 @@ string Device::getPropertyValue(string * property, string * component)
 	if (*property == "imei")
 		return imei(*component);
 
+        if (*property == "type")
+                return type(*component);
+
 	if (*property == "model")
 		return model(*component);
 
@@ -47,6 +50,11 @@ string Device::getPropertyValue(string * property, string * component)
 string Device::imei(string deviceName)
 {
 	return "imei";
+}
+
+string Device::type(string deviceName)
+{
+	return "type";
 }
 
 string Device::model(string deviceName)

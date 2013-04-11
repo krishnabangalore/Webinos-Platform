@@ -125,6 +125,17 @@ namespace nativedevicestatus_v8 {
 		string res = "watchPropertyChange";
 		return String::New(res.c_str(), res.length());
 	}
+	Handle<Value> setDeviceType( const Arguments &args )
+    {
+        if (args.Length() > 1) {
+            HandleScope handle_scope;
+            String::Utf8Value deviceType(args[0]);
+            Aspects::setDeviceType(deviceType);
+        }
+        else {
+            printf("setDeviceType has no arguments");
+        }
+    }
 }
 
 extern "C"
@@ -135,11 +146,14 @@ extern "C"
 		Local<FunctionTemplate> ft2 = FunctionTemplate::New(nativedevicestatus_v8::isSupported);
 		Local<FunctionTemplate> ft3 = FunctionTemplate::New(nativedevicestatus_v8::getPropertyValue);
 		Local<FunctionTemplate> ft4 = FunctionTemplate::New(nativedevicestatus_v8::watchPropertyChange);
-	
+	    Local<FunctionTemplate> ft5 = FunctionTemplate::New(nativedevicestatus_v8::setDeviceType);
+
 		target->Set( String::NewSymbol( "getComponents" ), ft1->GetFunction() );
 		target->Set( String::NewSymbol( "isSupported" ), ft2->GetFunction() );
 		target->Set( String::NewSymbol( "getPropertyValue" ), ft3->GetFunction() );
 		target->Set( String::NewSymbol( "watchPropertyChange" ), ft4->GetFunction() );
+		target->Set( String::NewSymbol( "setDeviceType" ), ft5->GetFunction() );
+
 	}
 
 	NODE_MODULE(nativedevicestatus, init);

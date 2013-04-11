@@ -130,6 +130,7 @@
     "cn": "",
     "email": "hello@webinos.org"
   },
+  "deviceType": "",
   "friendlyName": "",
   "webinos_version": {
     "tag": "v0.8.0",

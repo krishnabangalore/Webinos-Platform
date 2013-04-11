@@ -14,6 +14,7 @@ class Device : Aspect {
 		static Device * getInstance();
 
 		string imei(string);
+                string type(string);
 		string model(string);
 		string vendor(string);
 		string version(string);

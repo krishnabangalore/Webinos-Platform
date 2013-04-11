@@ -76,6 +76,27 @@ function Config () {
         }
     }
 
+//-----DeviceType----
+    function setdeviceType(deviceType) {
+        if(deviceType) {
+            self.metaData.deviceType = deviceType;
+        } else {
+            if (os.platform()  === "android" ){
+                self.metaData.deviceType = "smartphone";
+            } else if (process.platform === "win32") {
+                self.metaData.deviceType = "laptop";
+            } else if (process.platform === "darwin") {
+                self.metaData.deviceType = "laptop";
+            } else if (process.platform === "linux" || process.platform === "freebsd") {
+                self.metaData.deviceType = "laptop";
+            } else {
+                self.metaData.deviceType = "webinos Device";// Add manually
+            }
+        }
+    }
+//------------------
+
+   
     function compareObjects(objA, objB){
         if (typeof objA !== "object" || typeof objB !== "object") {
             return false;
@@ -141,6 +162,11 @@ function Config () {
         if (webinosType === "Pzp" && config.friendlyName !== "") {
             setFriendlyName(config.friendlyName);
         }
+//----DeviceType----
+        if (webinosType === "Pzp" && config.deviceType !== "") {
+            setdeviceType(config.deviceType);
+        }
+//----DeviceType----
     }
 
     function createPolicyFile() {
@@ -214,10 +240,10 @@ function Config () {
                 fs.mkdirSync (self.metaData.webinosRoot, internal_permission);
             // webinos root was created, we need the following 1st level dirs
             var list = [ path.join (self.metaData.webinosRoot, "logs"),
+                path.join (webinos_root, "wrt"),
                 path.join (self.metaData.webinosRoot, "certificates"),
                 path.join (self.metaData.webinosRoot, "policies"),
                 path.join (self.metaData.webinosRoot, "wrt"),
-                path.join (self.metaData.webinosRoot, "wrt", "sessions"),
                 path.join (self.metaData.webinosRoot, "userData"),
                 path.join (self.metaData.webinosRoot, "keys"),
                 path.join (self.metaData.webinosRoot, "certificates", "external"),
@@ -270,7 +296,14 @@ function Config () {
                     if (webinosType === "Pzh" || webinosType === "PzhCA") {
                         self.serviceCache = defaultConfig.pzhDefaultServices.slice(0);
                         self.metaData.friendlyName = self.userData.name +" ("+ self.userData.authenticator + ")";
-                    } else if (webinosType === "Pzp" || webinosType === "PzpCA") {
+                    } 
+//------DeviceType------
+                    else if (webinosType === "Pzp" || webinosType === "PzhCA") {
+                        self.serviceCache = defaultConfig.pzpDefaultServices.slice(0);
+                        setdeviceType(inputConfig.deviceType || defaultConfig.deviceType);
+                    }
+//----------------------
+                        else if (webinosType === "Pzp" || webinosType === "PzpCA") {
                         self.serviceCache = defaultConfig.pzpDefaultServices.slice(0);
                     }
 

@@ -10,4 +10,5 @@ class Aspect {
 		virtual vector<string> getComponents() = 0;
 		virtual bool isSupported(string * = 0) = 0;
 		virtual string getPropertyValue(string * = 0, string * = 0) = 0;
+		virtual void setDeviceType(string *) = 0;
 };
